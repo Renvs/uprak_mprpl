@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uprak 1 | Lukman</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="h-[80px] flex bg-gray-300 mx-auto justify-center items-center">
+                <h4 class="font-semibold text-3xl">Toko Gamepad</h4>
+                <a href=""><img class="h-[60px] ml-8" src="assets/viureth-favicon-color.png" alt=""></a>
+            </div>
+        </header>
+
+        <main>
+            <form action="">
+                <div class="h-screen border-solid border-2 border-black m-3">
+                    <div class="h-[200px] bg-gray-300 m-2 flex p-3">
+                        <div class="px-8 w-[50%] justify-center items-center">
+                            <div class="flex flex-col justify-center items-center">
+                                <div class="flex items-center mb-1">
+                                    <label for="nota" class="mr-2">No. Nota:</label>
+                                    <input class="bg-gray-400 h-[30px] p-3 rounded-lg" type="text" name="" id="nota">
+                                </div>
+                                <div class="flex items-center mb-1">
+                                    <label for="nama" class="mr-2">Pelanggan:</label>
+                                    <input class="bg-gray-400 h-[30px] p-3 rounded-lg" type="text" name="" id="nama">
+                                </div>
+                                <div class="flex items-center mb-1">
+                                    <label for="tanggal" class="mr-2">Tanggal:</label>
+                                    <input class="bg-gray-400 h-[30px] p-3 rounded-lg" type="date" name="" id="tanggal">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-[50%] border-solid border-black border-2 p-3 flex justify-center items-center">
+                            <div class="flex flex-col items-center text-2xl">
+                                <h4 class="font-semibold text-red-500">Total Pembayaran</h4>
+                                <h4>{{ formatRupiah(totalHarga) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class=" h-[50px] m-2 p-3 flex justify-center gap-[100px]">
+                        <div>
+                            <label for="kode">Kode Barang :</label>
+                            <select class="bg-gray-300 rounded-sm w-[50px]" name="" id="kode" v-model="selectedBarangId" @change="updateSelectedBarang">
+                                <option v-for="barang in barangList" :key="barang.id" :value="barang.id">{{ barang.id }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="namabar">Nama Barang : </label>
+                            <input class="bg-gray-300 px-1 rounded-sm" type="text" name="" id="namabar" :value="selectedBarang ? selectedBarang.barang : ''" disabled>
+                        </div>
+                        <div>
+                            <label for="qty">Quantity</label>
+                            <select class="bg-gray-300 px-1 rounded-sm" name="" id="qty" v-model="selectedQuantity" @change="updateQuantity">
+                                <option  v-for="qty in 10" :key="qty" :value="qty">{{ qty }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class=" h-[300px] m-2">
+                        <table border="1" class="border-solid border-2 border-black w-full">
+                            <thead>
+                                <tr>
+                                    <th>Id Barang</th>
+                                    <th>Nama Barang</th>
+                                    <th>Harga Satuan</th>
+                                    <th>Qty</th>
+                                    <th>Jumlah</th>
+                                    <th>Opsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in barangList" :key="item.id" v-if="item.quantity > 0">
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.barang }}</td>
+                                    <td>{{ formatRupiah(item.harga) }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ formatRupiah(item.harga * item.quantity) }}</td>
+                                    <td><button type="button" @click="removeItem(item.id)">Hapus</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class=" h-[180px] m-2 flex gap-x-3">
+                        <div class="border-solid border-2 border-black w-[38%] p-3 flex flex-col">
+                            <label for="subtotal">Sub Total : </label>
+                            <input class="rounded-sm bg-gray-300" type="text" name="" id="subtotal" :value="formatRupiah(subTotal)" disabled>
+                            <label for="diskon">Diskon : </label>
+                            <input class="rounded-sm bg-gray-300" type="text" name="" id="diskon" v-model="diskon" @input="calculateTotal">
+                            <label for="totalharga">Total Harga : </label>
+                            <input class="rounded-sm bg-gray-300" type="text" name="" id="totalharga" :value="formatRupiah(totalHarga)" disabled>
+                        </div>
+                        <div class="border-solid border-2 border-black w-[38%] p-3 flex flex-col">
+                            <label for="bayar">Bayar : </label>
+                            <input class="rounded-sm bg-gray-300" type="text" name="" id="bayar" v-model="bayar" @input="calculateKembalian">
+                            <label for="kembalian">Kembalian : </label>
+                            <input class="rounded-sm bg-gray-300" type="text" name="" id="kembalian" :value="formatRupiah(kembalian)" disabled>
+                        </div>
+                        <div class="bg-green-300 w-[24%] m-[50px] flex justify-center items-center">
+                            <button type="button" @click="selesai">Selesai</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        const app = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    barangList: [
+                        { id: 1, barang: 'Gamepad Rexus', harga: 200000, quantity: 0 },
+                        { id: 2, barang: 'Gamepad Xbox', harga: 600000, quantity: 0 },
+                        { id: 3, barang: 'Gamepad Microsoft', harga: 300000, quantity: 0 },
+                        { id: 4, barang: 'Gamepad Fantech', harga: 400000, quantity: 0 },
+                        { id: 5, barang: 'Gamepad Gulikit', harga: 500000, quantity: 0 }
+                    ],
+                    selectedBarangId: null,
+                    selectedBarang: null,
+                    selectedQuantity: 1,
+                    diskon: 0,
+                    bayar: 0,
+                    kembalian: 0
+                };
+            },
+            computed: {
+                subTotal() {
+                    return this.barangList.reduce((total, item) => total + (item.harga * item.quantity), 0);
+                },
+                totalHarga() {
+                    return this.subTotal - this.diskon;
+                }
+            },
+            methods: {
+                updateSelectedBarang() {
+                    this.selectedBarang = this.barangList.find(barang => barang.id === this.selectedBarangId);
+                    if (this.selectedBarang && this.selectedBarang.quantity === 0) {
+                        this.selectedBarang.quantity = this.selectedQuantity;
+                    }
+                },
+                updateQuantity() {
+                    if (this.selectedBarang) {
+                        this.selectedBarang.quantity = this.selectedQuantity;
+                    }
+                },
+                calculateTotal() {
+                    // Computed property totalHarga handles this
+                },
+                calculateKembalian() {
+                    this.kembalian = this.bayar - this.totalHarga;
+                },
+                removeItem(id) {
+                    const item = this.barangList.find(barang => barang.id === id);
+                    if (item) {
+                        item.quantity = 0;
+                    }
+                },
+                selesai() {
+                    alert('Transaction Completed');
+                    this.selectedBarangId = null;
+                    this.selectedBarang = null;
+                    this.selectedQuantity = 1;
+                    this.diskon = 0;
+                    this.bayar = 0;
+                    this.kembalian = 0;
+                    this.barangList.forEach(barang => barang.quantity = 0);
+                },
+                formatRupiah(harga) {
+                    return harga.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
